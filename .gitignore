@@ -1,3 +1,3 @@
-contracts/artifacts/
+contracts/*/artifacts/*
 npm/
 .deps/

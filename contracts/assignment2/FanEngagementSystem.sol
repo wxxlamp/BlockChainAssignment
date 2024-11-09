@@ -87,6 +87,7 @@ contract FanEngagementSystem is Ownable {
     // Function to redeem tokens for rewards
     function redeemTokens(uint256 amount, string memory rewardType) public {
         require(rewardToken.balanceOf(msg.sender) >= amount, "Insufficient balance");
+        // destory the amount
         rewardToken.burn(amount);
         rewardHistory[msg.sender].push(rewardType);
         emit TokensRedeemed(msg.sender, amount, rewardType);
@@ -94,7 +95,7 @@ contract FanEngagementSystem is Ownable {
 
     // Function to mint NFT badges for fans, only owner can do
     function mintNFTBadge(address fan, string memory badgeName) public onlyOwner {
-        // Minting NFT Logic
+        // Minting NFT 
         nftBadge.mintToken(fan, badgeName);
         emit NFTBadgeMinted(fan, badgeName);
     }

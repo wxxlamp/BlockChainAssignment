@@ -21,6 +21,9 @@ contract DecentralizedCharityFund {
     mapping(address => uint256) public votingPower;
     // check the donor donate or not
     mapping(address => bool) public hasDonated;
+    // check some donor has voted or not for some project
+    // project -> donor -> voted or not
+    mapping(uint256 => mapping (address => bool)) donorHasVoted;
     // total voting power, increaing when donor donate.
     uint256 public totalVotingPower;
 
@@ -63,10 +66,12 @@ contract DecentralizedCharityFund {
         require(hasDonated[msg.sender], "Must be a donor to vote");
         require(requestId < projects.length, "Invalid request ID");
         require(!projects[requestId].finalized, "Request already finalized");
+        // one user cannot vote twice for one project
+        require(!donorHasVoted[requestId][msg.sender], "One user cannot vote twice for one project");
 
         FundingProject storage request = projects[requestId];
         request.votes += votingPower[msg.sender];
-
+        donorHasVoted[requestId][msg.sender] = true;
         emit RequestVoted(requestId, msg.sender, votingPower[msg.sender]);
         return true;
     }
