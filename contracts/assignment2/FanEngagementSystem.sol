@@ -51,7 +51,7 @@ contract FanEngagementSystem is Ownable {
     // each proposals
     Proposal[] internal proposals;
     // the vote state of proposals
-    mapping(address => mapping(uint256 => bool)) public proposalVotes;
+    mapping(address => mapping(uint256 => bool)) internal proposalVotes;
     // Tracks fans' reward history
     mapping(address => string[]) internal rewardHistory; 
 
@@ -67,7 +67,7 @@ contract FanEngagementSystem is Ownable {
         nftBadge = new NFTBadge();
     }
 
-    // Function to earn tokens based on fan activities
+    // Function to earn tokens based on fan activities, only owner can do
     function earnTokens(address fan, uint256 amount, string memory activityType, string memory activityProof) public onlyOwner {
         
         // verify the activity proof goes here, activity proof must not be empty
@@ -87,14 +87,15 @@ contract FanEngagementSystem is Ownable {
     // Function to redeem tokens for rewards
     function redeemTokens(uint256 amount, string memory rewardType) public {
         require(rewardToken.balanceOf(msg.sender) >= amount, "Insufficient balance");
+        // destory the amount
         rewardToken.burn(amount);
         rewardHistory[msg.sender].push(rewardType);
         emit TokensRedeemed(msg.sender, amount, rewardType);
     }
 
-    // Function to mint NFT badges for fans
+    // Function to mint NFT badges for fans, only owner can do
     function mintNFTBadge(address fan, string memory badgeName) public onlyOwner {
-        // Minting NFT Logic
+        // Minting NFT 
         nftBadge.mintToken(fan, badgeName);
         emit NFTBadgeMinted(fan, badgeName);
     }
@@ -111,6 +112,7 @@ contract FanEngagementSystem is Ownable {
     function voteOnProposal(uint256 proposalId) public {
         // only user hold token can vote proposal
         require(rewardToken.balanceOf(msg.sender) > 0, "user must have token to vote proposal");
+        // user who voted cannot vote again
         require(!proposalVotes[msg.sender][proposalId], "Already voted");
         require(proposalId < proposals.length, "Invalid proposalId ID");
         proposals[proposalId].voteCount++;
