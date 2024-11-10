@@ -12,9 +12,9 @@ contract DecentralizedAuctionHouse is ReentrancyGuard {
         uint256 endTime;
         address highestBidder;
         uint256 highestBid;
-        // whether the auction finalized or not
+        // whether the auction finalized or not, default valus is false
         bool finalized;
-        // whether the auction finalized or not
+        // whether the auction finalized or not, default valus is false
         bool artworkTransferred;
     }
 
@@ -35,6 +35,7 @@ contract DecentralizedAuctionHouse is ReentrancyGuard {
 
     constructor() {}
 
+    // create he auction by artist
     function createAuction(string memory itemName, uint256 reservePrice, uint256 auctionDuration) external {
         auctionCount++;
         auctions[auctionCount] = Auction({
