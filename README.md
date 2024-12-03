@@ -88,3 +88,12 @@ extension.
 * getAuctionDetails: function getAuctionDetails(uint256 auctionId) view returns (string memory, uint256, uint256, bool)
 
 
+## Assignment 3
+
+### Question 1
+1. Write test cases for all smart contracts you designed in the last assignment
+2. And verify them for vulnerabilities using any verification tool.
+3. Also, verify with etherscan after successful deployment in your testnet.
+
+### Question 2
+Design your Token (ERC20) and NFT (ERC721) with OpenZeppelin. Add some additional specifications to make your Token and NFT unique. Verify them for vulnerabilities using any verification tool before deploying. Also, verify with etherscan after successful deployment in your testnet.

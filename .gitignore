@@ -1,5 +1,6 @@
 contracts/*/artifacts/*
 npm/
 .deps/
-test/artifacts/*
+tests/artifacts/*
 .states/
+*_flattened.sol
