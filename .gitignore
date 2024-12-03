@@ -1,0 +1,5 @@
+contracts/*/artifacts/*
+npm/
+.deps/
+test/artifacts/*
+.states/
