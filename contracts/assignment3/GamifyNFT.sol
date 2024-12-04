@@ -4,6 +4,7 @@ pragma solidity ^0.8.0;
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol"; // Import IERC20 interface
+import "hardhat/console.sol";
 
 contract GamifyNFT is ERC721URIStorage, Ownable {
     uint256 public tokenCounter;
@@ -24,9 +25,10 @@ contract GamifyNFT is ERC721URIStorage, Ownable {
     // Function to mint an NFT
     function mintNFT(string memory tokenURI) external {
         require(tokenCounter < maxSupply, "Max supply reached");
-
+        console.log("%s test", tokenCounter);
         // Check if the sender has the required ERC20 token balance
         uint256 userBalance = IERC20(erc20Token).balanceOf(msg.sender);
+        console.log("%s test", userBalance);
         require(userBalance >= requiredTokenBalance, "Insufficient ERC20 token balance");
 
         uint256 newTokenId = tokenCounter;

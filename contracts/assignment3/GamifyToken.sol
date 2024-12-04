@@ -12,8 +12,14 @@ contract GamifyToken is ERC20, Ownable {
 
     address[] private holders; // Array to store token holders
     mapping(address => bool) private isHolder; // Mapping to check if an address is a holder
+    mapping(address => uint256) public voteTaxRate;
+    mapping(address => uint256) public voteBurnRate;
 
-    constructor() ERC20("GamifyToken", "GAM") Ownable(msg.sender) {
+
+    event TaxRateChanged(uint256 newTaxRate);
+    event BurnRateChanged(uint256 newBurnRate);
+
+   constructor() ERC20("GamifyToken", "GAM") Ownable(msg.sender) {
         _mint(msg.sender, 1000000 * 10 ** decimals()); // Initial supply of 1 million tokens
         taxRate = 2; // Default 2% tax
         burnRate = 1; // Default 1% burn
@@ -21,12 +27,8 @@ contract GamifyToken is ERC20, Ownable {
         // Add the contract deployer as the first holder
         _addHolder(msg.sender);
     }
- 
-    function transfer(
-        address sender,
-        address recipient,
-        uint256 amount
-    ) internal  {
+
+    function transfer(address recipient, uint256 amount) public override returns (bool) {
         uint256 tax = (amount * taxRate) / 100;
         uint256 burn = (amount * burnRate) / 100;
         uint256 netAmount = amount - tax - burn;
@@ -35,20 +37,14 @@ contract GamifyToken is ERC20, Ownable {
         _distributeTax(tax);
 
         // Burn the calculated amount
-        _burn(sender, burn);
+        _burn(_msgSender(), burn);
 
         // Perform the actual transfer
-        super._transfer(sender, recipient, netAmount);
+        super.transfer(recipient, netAmount);
 
-        // Add recipient as a token holder if they have a balance greater than zero
-        if (balanceOf(recipient) > 0) {
-            _addHolder(recipient);
-        }
+        _updateHolders(_msgSender(), recipient);
 
-        // Remove sender from holders if their balance becomes zero
-        if (balanceOf(sender) == 0) {
-            _removeHolder(sender);
-        }
+        return true;
     }
 
     function _distributeTax(uint256 tax) private {
@@ -67,28 +63,58 @@ contract GamifyToken is ERC20, Ownable {
         uint256 timeHeld = block.timestamp - lastClaimed[msg.sender];
         uint256 reward = (balanceOf(msg.sender) * rewardRate * timeHeld) / (365 days * 100);
         require(reward > 0, "No rewards available");
-        
+
         _mint(msg.sender, reward);
         lastClaimed[msg.sender] = block.timestamp;
     }
 
-    function setTaxRate(uint256 _taxRate) external onlyOwner {
-        require(_taxRate <= 10, "Tax rate cannot exceed 10%");
-        taxRate = _taxRate;
+    function updateTaxRate() external onlyOwner {
+
+        uint sumTaxRate = 0;
+        for (uint256 i = 0; i < holders.length; i++) {
+            address holder = holders[i];
+            sumTaxRate += voteTaxRate[holder];
+        }
+        taxRate = sumTaxRate/holders.length;
+        emit TaxRateChanged(taxRate);
     }
 
-    function setBurnRate(uint256 _burnRate) external onlyOwner {
-        require(_burnRate <= 5, "Burn rate cannot exceed 5%");
-        burnRate = _burnRate;
+    function updateBurnRate() external onlyOwner {
+        uint sumBurnRate = 0;
+        for (uint256 i = 0; i < holders.length; i++) {
+            address holder = holders[i];
+            sumBurnRate += voteBurnRate[holder];
+        }
+        burnRate = sumBurnRate/holders.length;
+        emit BurnRateChanged(burnRate);
     }
 
-    // Function to get all holders
-    function getHolders() external view returns (address[] memory) {
-        return holders;
+    function voteOnTaxRate(uint256 _proposedTaxRate) external {
+        require(_proposedTaxRate > 0, "_proposedTaxRate must larger than 0");
+        require(_proposedTaxRate <= 10, "Tax rate cannot exceed 10%");
+        require(balanceOf(msg.sender) > 0, "Only token holders can vote");
+        voteTaxRate[msg.sender] = _proposedTaxRate;
+    }
+
+    function voteOnBurnRate(uint256 _proposedBurnRate) external {
+        require(balanceOf(msg.sender) > 0, "Only token holders can vote");
+        require(_proposedBurnRate > 0, "_proposedBurnRate must larger than 0");
+        require(_proposedBurnRate <= 5, "Burn rate cannot exceed 5%");
+
+        voteBurnRate[msg.sender] = _proposedBurnRate;
+    }
+
+    function _updateHolders(address sender, address recipient) private {
+        if (balanceOf(recipient) > 0 && !isHolder[recipient]) {
+            _addHolder(recipient);
+        }
+        if (balanceOf(sender) == 0) {
+            _removeHolder(sender);
+        }
     }
 
     // Internal function to add a holder
-    function _addHolder(address account) internal {
+    function _addHolder(address account) private {
         if (!isHolder[account]) {
             isHolder[account] = true;
             holders.push(account);
@@ -96,7 +122,8 @@ contract GamifyToken is ERC20, Ownable {
     }
 
     // Internal function to remove a holder
-    function _removeHolder(address account) internal {
+
+    function _removeHolder(address account) private {
         if (isHolder[account]) {
             isHolder[account] = false;
 
