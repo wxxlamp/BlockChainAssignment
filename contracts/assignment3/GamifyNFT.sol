@@ -5,7 +5,6 @@ import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol"; // Import IERC20 interface
 import "contracts/assignment3/GamifyToken.sol";
-import "hardhat/console.sol";
 
 contract GamifyNFT is ERC721URIStorage, Ownable {
     uint256 public tokenCounter;
