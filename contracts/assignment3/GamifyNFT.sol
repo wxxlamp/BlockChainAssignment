@@ -4,18 +4,19 @@ pragma solidity ^0.8.0;
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol"; // Import IERC20 interface
+import "contracts/assignment3/GamifyToken.sol";
 import "hardhat/console.sol";
 
 contract GamifyNFT is ERC721URIStorage, Ownable {
     uint256 public tokenCounter;
-    address public erc20Token;
+    address public erc20Token; // it refers to the GamifyToken
     uint256 public requiredTokenBalance; // Minimum ERC20 tokens required to mint
     uint256 public maxSupply; // Max NFTs that can be minted
 
     mapping(uint256 => uint256) public level; // Map token ID to level
     mapping(uint256 => uint256) public lastUpdated; // Last time the metadata was updated
 
-    constructor(address _erc20Token) ERC721("GamifyNFT", "GAMNFT") Ownable(msg.sender)  {
+    constructor(address _erc20Token) ERC721("GamifyNFT", "GAMNFT") Ownable(msg.sender) {
         tokenCounter = 0;
         erc20Token = _erc20Token;
         requiredTokenBalance = 100 * 10**18; // Default: 100 ERC20 tokens required
@@ -25,10 +26,8 @@ contract GamifyNFT is ERC721URIStorage, Ownable {
     // Function to mint an NFT
     function mintNFT(string memory tokenURI) external {
         require(tokenCounter < maxSupply, "Max supply reached");
-        console.log("%s test", tokenCounter);
         // Check if the sender has the required ERC20 token balance
         uint256 userBalance = IERC20(erc20Token).balanceOf(msg.sender);
-        console.log("%s test", userBalance);
         require(userBalance >= requiredTokenBalance, "Insufficient ERC20 token balance");
 
         uint256 newTokenId = tokenCounter;
@@ -38,6 +37,8 @@ contract GamifyNFT is ERC721URIStorage, Ownable {
         level[newTokenId] = 1; // Start at level 1
         lastUpdated[newTokenId] = block.timestamp;
         tokenCounter++;
+        // mark user has the nft to gamifyToken
+        GamifyToken(erc20Token).setNFTMark(msg.sender);
     }
 
     // Function to evolve an NFT (e.g., increase level)

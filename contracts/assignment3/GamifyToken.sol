@@ -14,7 +14,9 @@ contract GamifyToken is ERC20, Ownable {
     mapping(address => bool) private isHolder; // Mapping to check if an address is a holder
     mapping(address => uint256) public voteTaxRate;
     mapping(address => uint256) public voteBurnRate;
+    mapping(address => bool) public holdingNFT; // user who hold GamifyToken will not pay the tax
 
+    address private gamifyNFTAddress;
 
     event TaxRateChanged(uint256 newTaxRate);
     event BurnRateChanged(uint256 newBurnRate);
@@ -31,7 +33,9 @@ contract GamifyToken is ERC20, Ownable {
     function transfer(address recipient, uint256 amount) public override returns (bool) {
         uint256 tax = (amount * taxRate) / 100;
         uint256 burn = (amount * burnRate) / 100;
-        uint256 netAmount = amount - tax - burn;
+ 
+        // if the recipient holds NFT, then he will not reduce the tax;
+        uint256 netAmount = holdingNFT[recipient] ? amount -burn : amount - tax - burn;
 
         // Distribute tax to all token holders
         _distributeTax(tax);
@@ -68,6 +72,19 @@ contract GamifyToken is ERC20, Ownable {
         lastClaimed[msg.sender] = block.timestamp;
     }
 
+    // set holder who has the nft
+    function setNFTMark(address holder) external {
+        if (gamifyNFTAddress == msg.sender) {
+            holdingNFT[holder] = true;
+        }
+    }
+
+    // owner can set the nft contract address
+    function setGamifyNFTAddress(address nftAddress) external onlyOwner {
+        gamifyNFTAddress = nftAddress;
+    }
+
+    // only owner can update the tax rate(the value is from every token holders' voting rate)
     function updateTaxRate() external onlyOwner {
 
         uint sumTaxRate = 0;
@@ -79,6 +96,7 @@ contract GamifyToken is ERC20, Ownable {
         emit TaxRateChanged(taxRate);
     }
 
+    // only owner can update the burn rate(the value is from every token holders' voting rate)
     function updateBurnRate() external onlyOwner {
         uint sumBurnRate = 0;
         for (uint256 i = 0; i < holders.length; i++) {
