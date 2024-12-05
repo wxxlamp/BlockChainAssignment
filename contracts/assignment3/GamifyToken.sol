@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.26;
 
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 
 contract GamifyToken is ERC20, Ownable {
@@ -35,7 +36,7 @@ contract GamifyToken is ERC20, Ownable {
         uint256 burn = (amount * burnRate) / 100;
  
         // if the recipient holds NFT, then he will not reduce the tax;
-        uint256 netAmount = holdingNFT[recipient] ? amount -burn : amount - tax - burn;
+        uint256 netAmount = IERC721(gamifyNFTAddress).balanceOf(recipient) > 0 ? amount -burn : amount - tax - burn;
 
         // Distribute tax to all token holders
         _distributeTax(tax);
@@ -53,7 +54,7 @@ contract GamifyToken is ERC20, Ownable {
 
     function _distributeTax(uint256 tax) private {
         uint256 totalSupply_ = totalSupply();
-        if (totalSupply_ == 0) return;
+        if (totalSupply_ <= 0) return;
 
         // Distribute tax as rewards to all token holders
         for (uint256 i = 0; i < holders.length; i++) {
@@ -70,13 +71,6 @@ contract GamifyToken is ERC20, Ownable {
 
         _mint(msg.sender, reward);
         lastClaimed[msg.sender] = block.timestamp;
-    }
-
-    // set holder who has the nft
-    function setNFTMark(address holder) external {
-        if (gamifyNFTAddress == msg.sender) {
-            holdingNFT[holder] = true;
-        }
     }
 
     // owner can set the nft contract address
@@ -126,7 +120,7 @@ contract GamifyToken is ERC20, Ownable {
         if (balanceOf(recipient) > 0 && !isHolder[recipient]) {
             _addHolder(recipient);
         }
-        if (balanceOf(sender) == 0) {
+        if (balanceOf(sender) <= 0) {
             _removeHolder(sender);
         }
     }

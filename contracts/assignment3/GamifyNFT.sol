@@ -1,10 +1,9 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.26;
 
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol"; // Import IERC20 interface
-import "contracts/assignment3/GamifyToken.sol";
 
 contract GamifyNFT is ERC721URIStorage, Ownable {
     uint256 public tokenCounter;
@@ -36,8 +35,6 @@ contract GamifyNFT is ERC721URIStorage, Ownable {
         level[newTokenId] = 1; // Start at level 1
         lastUpdated[newTokenId] = block.timestamp;
         tokenCounter++;
-        // mark user has the nft to gamifyToken
-        GamifyToken(erc20Token).setNFTMark(msg.sender);
     }
 
     // Function to evolve an NFT (e.g., increase level)
